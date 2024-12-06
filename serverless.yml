@@ -1,0 +1,72 @@
+org: faladev
+
+app: embarca-ai
+
+service: embarca-ai
+
+provider:
+  name: aws
+  runtime: python3.12
+  environment:
+    DB_HOST: ep-shiny-firefly-a5gm07yq.us-east-2.aws.neon.tech
+    DB_NAME: neondb
+    DB_USER: neondb_owner
+    DB_PASS: eyJbUH87GIwi
+    DB_PORT: 5432
+    BUCKET_NAME: faladev-embarcaai
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+      Resource: arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*
+
+
+functions:
+  lambda1:
+    handler: src.lambda1.lambda1.lambda_handler
+    environment:
+      BUCKET_NAME: ${self:provider.environment.BUCKET_NAME}
+    events:
+      - http:
+          path: lambda1
+          method: post
+
+
+  lambda2:
+    handler: src.lambda2.lambda2.lambda_handler
+    environment:
+      DB_HOST: ${self:provider.environment.DB_HOST}
+      DB_NAME: ${self:provider.environment.DB_NAME}
+      DB_USER: ${self:provider.environment.DB_USER}
+      DB_PASS: ${self:provider.environment.DB_PASS}
+      DB_PORT: ${self:provider.environment.DB_PORT}
+  
+
+plugins:
+  - serverless-step-functions
+  - serverless-python-requirements
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.BUCKET_NAME}
+
+stepFunctions:
+  stateMachines:
+    processCSV:
+      definition:
+        StartAt: Lambda1
+        States:
+          Lambda1:
+            Type: Task
+            Resource: !GetAtt Lambda1LambdaFunction.Arn
+            Next: Lambda2
+          Lambda2:
+            Type: Task
+            Resource: !GetAtt Lambda2LambdaFunction.Arn
+            End: true      
