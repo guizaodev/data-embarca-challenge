@@ -8,12 +8,12 @@ provider:
   name: aws
   runtime: python3.12
   environment:
-    DB_HOST: ep-shiny-firefly-a5gm07yq.us-east-2.aws.neon.tech
-    DB_NAME: neondb
-    DB_USER: neondb_owner
-    DB_PASS: eyJbUH87GIwi
-    DB_PORT: 5432
-    BUCKET_NAME: faladev-embarcaai
+    DB_HOST: ${{ secrets.DB_HOST }}
+    DB_NAME: ${{ secrets.DB_NAME }}
+    DB_USER: ${{ secrets.DB_USER }}
+    DB_PASS: ${{ secrets.DB_PASS }}
+    DB_PORT: ${{ secrets.DB_PORT }}
+    BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
   iamRoleStatements:
     - Effect: Allow
       Action:
